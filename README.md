@@ -1,5 +1,11 @@
 # Android MCP Inspector
 
+[![CI](https://github.com/LeeJUNhao791/android-mcp-inspector/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/LeeJUNhao791/android-mcp-inspector/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/LeeJUNhao791/android-mcp-inspector)](https://github.com/LeeJUNhao791/android-mcp-inspector/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+[简体中文](README.zh-CN.md)
+
 A local MCP server that checks Android APKs for 16 KB alignment and traces native libraries to candidate AARs. The stdio tool `inspect_apk_16kb` checks the ELF segments and ZIP layout of an APK you own or are authorized to inspect.
 
 ## Set up
@@ -65,6 +71,8 @@ Use absolute paths for both the Python executable and `server.py`.
 
 ## Try the synthetic example
 
+Use the current `main` checkout for this example; `examples/make_trial.py` was added after v0.1.0.
+
 From the repository root, generate the archives in a new directory using Python 3.11 or newer. The generator runs offline with the standard library and the bundled test fixture.
 
 ```powershell
@@ -114,6 +122,10 @@ The structured response contains `exit_code` and `report`. The checker supplies 
 | 3 | `not_applicable` | No arm64-v8a or x86_64 shared libraries were found, and all applicable ZIP alignment checks passed. |
 
 When attribution is available, the report preserves `single_candidate`, `multiple_candidates`, or `unknown` and identifies the evidence method when the checker reports one.
+
+## Feedback
+
+Share first-use feedback on the synthetic trial in [issue #3](https://github.com/LeeJUNhao791/android-mcp-inspector/issues/3). For a reproducible defect, use the [bug report template](https://github.com/LeeJUNhao791/android-mcp-inspector/issues/new?template=bug_report.md). Remove private paths and use synthetic or redistributable inputs.
 
 ## Upstream code
 
