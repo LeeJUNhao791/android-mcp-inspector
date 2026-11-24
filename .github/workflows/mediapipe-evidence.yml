@@ -1,0 +1,82 @@
+name: MediaPipe MCP verification
+
+on:
+  push:
+    branches: [codex/android-mcp-mediapipe-example]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      SAMPLE: mediapipe-samples/examples/image_classification/android
+      EVIDENCE: mediapipe-samples/examples/image_classification/android/app/build/reports/apk-16kb
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check out the released Inspector
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/v0.1.1
+          path: inspector-release
+          persist-credentials: false
+      - name: Check out the pinned Toolkit exporter
+        uses: actions/checkout@v7
+        with:
+          repository: LeeJUNhao791/android-sdk-toolkit
+          ref: dbd640e7b4ccd8a87beb8ca1ed21be3b301b979c
+          path: toolkit
+          persist-credentials: false
+      - name: Check out the pinned MediaPipe sample
+        uses: actions/checkout@v7
+        with:
+          repository: google-ai-edge/mediapipe-samples
+          ref: 46d60d66baf21ae91977c488ea0875f0e13c4d2b
+          path: mediapipe-samples
+          sparse-checkout: |
+            examples/image_classification/android
+            android-common
+          persist-credentials: false
+      - name: Verify checkout revisions
+        run: |
+          test "$(git -C inspector-release rev-parse HEAD)" = 7073a55c12483e0717193d5041a4b8872d26a2f8
+          test "$(git -C toolkit rev-parse HEAD)" = dbd640e7b4ccd8a87beb8ca1ed21be3b301b979c
+          test "$(git -C mediapipe-samples rev-parse HEAD)" = 46d60d66baf21ae91977c488ea0875f0e13c4d2b
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Install released Inspector dependencies
+        run: python -m pip install --disable-pip-version-check -r inspector-release/requirements.txt
+      - name: Install Android SDK and NDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
+            "platforms;android-36" "build-tools;36.0.0" "ndk;27.0.12077973"
+      - name: Build the pinned MediaPipe APK and record its provenance
+        working-directory: ${{ env.SAMPLE }}
+        run: |
+          ./gradlew --no-daemon --no-configuration-cache --init-script \
+            "$GITHUB_WORKSPACE/toolkit/skills/apk-page-size-check/examples/export-debug-native-provenance.init.gradle" \
+            :app:verifyModels :app:exportDebugNativeProvenance :android-common:testing:testDebugUnitTest
+      - name: Compare released CLI and MCP on the same build
+        run: |
+          apk="$SAMPLE/app/build/outputs/apk/debug/app-debug.apk"
+          python -B examples/verify_mediapipe.py --inspector inspector-release \
+            --apk "$apk" --aar-manifest "$EVIDENCE/resolved-aars.json" \
+            --native-provenance "$EVIDENCE/native-provenance.json" \
+            > "$RUNNER_TEMP/mediapipe-evidence.json"
+          cat "$RUNNER_TEMP/mediapipe-evidence.json"
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -c -P 16 4 "$apk"
+      - name: Save the verification summary
+        uses: actions/upload-artifact@v7
+        with:
+          name: mediapipe-mcp-evidence
+          path: ${{ runner.temp }}/mediapipe-evidence.json
+          if-no-files-found: error
