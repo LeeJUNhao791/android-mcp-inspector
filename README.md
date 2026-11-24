@@ -71,7 +71,7 @@ Use absolute paths for both the Python executable and `server.py`.
 
 ## Try the synthetic example
 
-Use the current `main` checkout for this example; `examples/make_trial.py` was added after v0.1.0.
+The `v0.1.1` and later source archives include this example.
 
 From the repository root, generate the archives in a new directory using Python 3.11 or newer. The generator runs offline with the standard library and the bundled test fixture.
 
