@@ -1,0 +1,128 @@
+name: Cross-repository AAB 16 KiB proof
+
+on:
+  push:
+    branches: [verify/aab-16kb-v080-cross-repo]
+
+permissions:
+  contents: read
+
+jobs:
+  controls:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: LeeJUNhao791/android-delivery-workflows
+          ref: a9dadfb2ee7a041d7df63e85f0331f93c469a71d
+          path: proof-delivery
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: LeeJUNhao791/android-sdk-toolkit
+          ref: dbd640e7b4ccd8a87beb8ca1ed21be3b301b979c
+          path: proof-toolkit
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Install Android build tools
+        run: |
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Build the public demo seed on the caller runner
+        working-directory: proof-delivery/examples/android-app
+        run: ./gradlew --no-daemon :app:bundleRelease
+      - name: Download and verify bundletool
+        run: bash proof-delivery/tools/aab-preflight/setup-bundletool.sh
+      - name: Generate disposable signed control AABs
+        working-directory: proof-delivery
+        run: |
+          python -B examples/android-app/prepare-demo.py
+          mkdir -p build/hosted-alignment-proof/input
+          cp build/demo/{candidate.aab,release.json} build/hosted-alignment-proof/input/
+          # The original script pins the old hosted artifact, so replace its digest with this build's.
+          seed_sha="$(sha256sum build/hosted-alignment-proof/input/candidate.aab | cut -d ' ' -f 1)"
+          sed "s/8f97fd69755c2b784302b01302ebbdf6f9396ef1bd77217f2c0b6daf14c27acc/$seed_sha/" \
+            tools/aab-preflight/tests/build-hosted-controls.py | python -B - "$GITHUB_WORKSPACE/proof-toolkit"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: signed-16k-control
+          path: proof-delivery/build/hosted-alignment-proof/16K/
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: signed-4k-control
+          path: proof-delivery/build/hosted-alignment-proof/4K/
+          if-no-files-found: error
+          retention-days: 1
+
+  preflight-16k:
+    needs: controls
+    uses: LeeJUNhao791/android-delivery-workflows/.github/workflows/aab-preflight.yml@552883397325c56ddb79d45af8676c7456a2a225
+    with:
+      artifact-name: signed-16k-control
+      report-name: signed-16k-report
+      check-arm64-16kb: true
+
+  preflight-4k:
+    needs: controls
+    uses: LeeJUNhao791/android-delivery-workflows/.github/workflows/aab-preflight.yml@552883397325c56ddb79d45af8676c7456a2a225
+    with:
+      artifact-name: signed-4k-control
+      report-name: signed-4k-report
+      check-arm64-16kb: true
+
+  verify:
+    needs: [preflight-16k, preflight-4k]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require successful positive and failed negative
+        env:
+          POSITIVE: ${{ needs.preflight-16k.result }}
+          NEGATIVE: ${{ needs.preflight-4k.result }}
+        run: |
+          test "$POSITIVE" = success
+          test "$NEGATIVE" = failure
+      - uses: actions/download-artifact@v8
+        with:
+          name: signed-16k-report
+          path: reports/16k
+      - uses: actions/download-artifact@v8
+        with:
+          name: signed-4k-report
+          path: reports/4k
+      - name: Verify both reports and the ZIP-only failure
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          for case, result, status, offset in [
+              ("16k", "PASS", "pass", 16384), ("4k", "FAIL", "fail", 4096),
+          ]:
+              root = Path("reports") / case
+              split_dir = root / "arm64-16kb"
+              assert json.loads((root / "report.json").read_bytes())["result"] == "PASS"
+              summary = json.loads((split_dir / "summary.json").read_bytes())
+              assert summary["result"] == result
+              native = next(split for split in summary["splits"] if split["apk"].endswith("arm64_v8a.apk"))
+              master = next(split for split in summary["splits"] if split["apk"].endswith("base-master.apk"))
+              assert master["status"] == "not_applicable" and master["exit_code"] == 3
+              assert (split_dir / master["report"]).is_file()
+              assert native["status"] == status and native["exit_code"] == (0 if case == "16k" else 1)
+              report = json.loads((split_dir / native["report"]).read_bytes())
+              assert report["libraries"] == [{
+                  "entry": "lib/arm64-v8a/libaligned.so", "abi": "arm64-v8a",
+                  "elf": "pass", "zip": status, "load_issues": [], "zip_data_offset": offset,
+              }]
+              assert all(path.suffix in {".json", ".md"} for path in root.rglob("*") if path.is_file())
+              print(case, result, native["apk"], "ZIP offset", offset)
+          PY
