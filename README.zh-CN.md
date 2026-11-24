@@ -103,6 +103,10 @@ python -B examples/make_trial.py 'C:/Temp/Android MCP Trial'
 
 两个 AAR 都含有 `jni/arm64-v8a/libdevice.so`，只有 `device.aar` 的库字节与 APK 中相同。
 
+## 验证真实 MediaPipe APK
+
+构建 Google 的 Image Classification 示例，用 Inspector 正式版的 CLI 和 MCP 服务检查 debug APK。见 [MediaPipe 验证指南](examples/mediapipe.zh-CN.md)。
+
 ## 检查自己的 APK
 
 路径指向运行服务的机器。可选的 `aar_manifest` 和 `native_provenance` 必须来自 APK 的同一次构建；提供 `native_provenance` 时必须同时提供 `aar_manifest`。
