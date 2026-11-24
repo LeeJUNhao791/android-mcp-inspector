@@ -33,29 +33,27 @@ jobs:
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
             "platforms;android-36" "build-tools;36.0.0" "ndk;27.0.12077973"
-      - name: Build the release AAB and confirm the resolved MediaPipe native dependency
+      - name: Build the signed debug AAB and confirm the resolved MediaPipe native dependency
         working-directory: ${{ env.SAMPLE }}
         run: |
           set -o pipefail
           test "$(git rev-parse HEAD)" = "$SAMPLE_COMMIT"
+          export ANDROID_USER_HOME="$RUNNER_TEMP/mediapipe-android"
+          mkdir -p "$ANDROID_USER_HOME"
           ./gradlew --no-daemon --no-configuration-cache --console=plain \
-            :app:verifyModels :app:bundleRelease :app:dependencyInsight \
-            --configuration releaseRuntimeClasspath --dependency com.google.mediapipe:tasks-core \
+            :app:verifyModels :app:bundleDebug :app:dependencyInsight \
+            --configuration debugRuntimeClasspath --dependency com.google.mediapipe:tasks-core \
             | tee "$RUNNER_TEMP/mediapipe-gradle-build.log"
           grep -Fx 'com.google.mediapipe:tasks-core:1.2.2' "$RUNNER_TEMP/mediapipe-gradle-build.log"
-      - name: Sign with a disposable test certificate and record the native inventory
+      - name: Verify the disposable debug signature and record the native inventory
         run: |
           set -o pipefail
           mkdir candidate
-          key="$RUNNER_TEMP/mediapipe-proof.p12"
-          keytool -genkeypair -keystore "$key" -storetype PKCS12 -storepass changeit \
-            -alias mediapipe-proof -keyalg RSA -keysize 2048 -validity 30 \
-            -dname "CN=Disposable MediaPipe AAB Proof"
-          jarsigner -keystore "$key" -storepass changeit -signedjar candidate/candidate.aab \
-            "$SAMPLE/app/build/outputs/bundle/release/app-release.aab" mediapipe-proof
+          key="$RUNNER_TEMP/mediapipe-android/debug.keystore"
+          cp "$SAMPLE/app/build/outputs/bundle/debug/app-debug.aab" candidate/candidate.aab
           jarsigner -verify candidate/candidate.aab
-          fingerprint="$(keytool -exportcert -keystore "$key" -storepass changeit \
-            -alias mediapipe-proof | sha256sum | cut -d ' ' -f 1)"
+          fingerprint="$(keytool -exportcert -keystore "$key" -storepass android \
+            -alias androiddebugkey | sha256sum | cut -d ' ' -f 1)"
           python3 - "$fingerprint" <<'PY'
           import hashlib
           import json
