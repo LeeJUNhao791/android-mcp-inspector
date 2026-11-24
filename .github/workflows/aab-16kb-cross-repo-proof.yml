@@ -64,7 +64,7 @@ jobs:
 
   preflight-16k:
     needs: controls
-    uses: LeeJUNhao791/android-delivery-workflows/.github/workflows/aab-preflight.yml@552883397325c56ddb79d45af8676c7456a2a225
+    uses: LeeJUNhao791/android-delivery-workflows/.github/workflows/aab-preflight.yml@v0.8.0
     with:
       artifact-name: signed-16k-control
       report-name: signed-16k-report
@@ -72,7 +72,7 @@ jobs:
 
   preflight-4k:
     needs: controls
-    uses: LeeJUNhao791/android-delivery-workflows/.github/workflows/aab-preflight.yml@552883397325c56ddb79d45af8676c7456a2a225
+    uses: LeeJUNhao791/android-delivery-workflows/.github/workflows/aab-preflight.yml@v0.8.0
     with:
       artifact-name: signed-4k-control
       report-name: signed-4k-report
