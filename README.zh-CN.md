@@ -73,7 +73,7 @@ Python 和 `server.py` 均填写绝对路径。
 
 ## 试用合成 APK
 
-使用当前 `main` 检出；`examples/make_trial.py` 在 `v0.1.0` 之后加入。从仓库根目录生成样例，输出目录必须尚不存在：
+从 `v0.1.1` 起，发布的源码包包含此示例。从源码根目录生成样例，输出目录必须尚不存在：
 
 ```powershell
 python -B examples/make_trial.py 'C:/Temp/Android MCP Trial'
