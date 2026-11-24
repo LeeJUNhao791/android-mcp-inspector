@@ -1,0 +1,105 @@
+name: MediaPipe AAB 16 KiB proof
+
+on:
+  push:
+    branches: [verify/mediapipe-aab-16kb-v080]
+
+permissions:
+  contents: read
+
+jobs:
+  mediapipe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      SAMPLE: mediapipe-samples/examples/image_classification/android
+      SAMPLE_COMMIT: 46d60d66baf21ae91977c488ea0875f0e13c4d2b
+    steps:
+      - name: Check out the official MediaPipe image classification sample
+        uses: actions/checkout@v7
+        with:
+          repository: google-ai-edge/mediapipe-samples
+          ref: ${{ env.SAMPLE_COMMIT }}
+          path: mediapipe-samples
+          sparse-checkout: |
+            examples/image_classification/android
+            android-common
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK and NDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
+            "platforms;android-36" "build-tools;36.0.0" "ndk;27.0.12077973"
+      - name: Build the release AAB and confirm the resolved MediaPipe native dependency
+        working-directory: ${{ env.SAMPLE }}
+        run: |
+          set -o pipefail
+          test "$(git rev-parse HEAD)" = "$SAMPLE_COMMIT"
+          ./gradlew --no-daemon --no-configuration-cache --console=plain \
+            :app:verifyModels :app:bundleRelease :app:dependencyInsight \
+            --configuration releaseRuntimeClasspath --dependency com.google.mediapipe:tasks-core \
+            | tee "$RUNNER_TEMP/mediapipe-gradle-build.log"
+          grep -Fx 'com.google.mediapipe:tasks-core:1.2.2' "$RUNNER_TEMP/mediapipe-gradle-build.log"
+      - name: Sign with a disposable test certificate and record the native inventory
+        run: |
+          set -o pipefail
+          mkdir candidate
+          key="$RUNNER_TEMP/mediapipe-proof.p12"
+          keytool -genkeypair -keystore "$key" -storetype PKCS12 -storepass changeit \
+            -alias mediapipe-proof -keyalg RSA -keysize 2048 -validity 30 \
+            -dname "CN=Disposable MediaPipe AAB Proof"
+          jarsigner -keystore "$key" -storepass changeit -signedjar candidate/candidate.aab \
+            "$SAMPLE/app/build/outputs/bundle/release/app-release.aab" mediapipe-proof
+          jarsigner -verify candidate/candidate.aab
+          fingerprint="$(keytool -exportcert -keystore "$key" -storepass changeit \
+            -alias mediapipe-proof | sha256sum | cut -d ' ' -f 1)"
+          python3 - "$fingerprint" <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import sys
+          from zipfile import ZipFile
+
+          root = Path("candidate")
+          bundle = root / "candidate.aab"
+          # The app ID and versions come from the pinned upstream app/build.gradle.kts.
+          contract = {
+              "application_id": "com.google.mediapipe.examples.imageclassification",
+              "version_code": 1,
+              "version_name": "1.0",
+              "upload_certificate_sha256": sys.argv[1],
+          }
+          (root / "release.json").write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+          with bundle.open("rb") as data:
+              bundle_sha = hashlib.file_digest(data, "sha256").hexdigest()
+          with ZipFile(bundle) as archive:
+              inventory = {
+                  entry.filename: entry.file_size
+                  for entry in archive.infolist()
+                  if "/lib/" in entry.filename and entry.filename.endswith(".so")
+              }
+          assert inventory.get("base/lib/arm64-v8a/libmediapipe_tasks_jni.so", 0) > 0, inventory
+          print(f"MediaPipe sample commit: {os.environ['SAMPLE_COMMIT']}")
+          print(f"Signed AAB SHA-256: {bundle_sha}")
+          print(f"Disposable certificate SHA-256: {sys.argv[1]}")
+          for entry, size in sorted(inventory.items()):
+              print(f"AAB native library: {entry} ({size} bytes)")
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: signed-mediapipe-aab
+          path: candidate/
+          if-no-files-found: error
+          retention-days: 1
+
+  preflight:
+    needs: mediapipe
+    uses: LeeJUNhao791/android-delivery-workflows/.github/workflows/aab-preflight.yml@v0.8.0
+    with:
+      artifact-name: signed-mediapipe-aab
+      report-name: mediapipe-aab-16kb-report
+      check-arm64-16kb: true
