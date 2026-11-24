@@ -100,6 +100,10 @@ The response includes these values.
 | `origin.status`, `origin.candidates[0].coordinate` | `single_candidate`, `example:device-native:1` |
 | `origin.sha256` | `7240b15ae351fa6c080791c11a763db475d3286c134d956ac6b8cf38adac5b88` |
 
+## Verify a real MediaPipe APK
+
+Build Google's Image Classification sample and check its debug APK with the released Inspector CLI and MCP server. Follow the [MediaPipe verification guide](examples/mediapipe.md).
+
 ## Call the tool
 
 Pass the APK's absolute path on the machine that runs the server. Supply the two optional inputs from the same build as the APK. If you provide `native_provenance`, also provide `aar_manifest`.
