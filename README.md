@@ -8,6 +8,10 @@
 
 A local MCP server that checks Android APKs for 16 KB alignment and traces native libraries to candidate AARs. The stdio tool `inspect_apk_16kb` checks the ELF segments and ZIP layout of an APK you own or are authorized to inspect.
 
+![Actual MCP stdio call: MediaPipe APK inspection returns pass and matches the full CLI report](docs/assets/inspector-demo.png)
+
+Actual output visualization from an official Python MCP client calling the local server on 2026-11-26. The real MediaPipe debug APK passed static alignment checks; device behavior requires separate testing. [Reproduce the call and check the input hash](docs/assets/demo.md).
+
 ## Set up
 
 Use Python 3.11 or newer. Run these commands from the repository root with a virtual environment outside the checkout.

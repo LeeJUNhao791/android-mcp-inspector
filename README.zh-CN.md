@@ -10,6 +10,10 @@
 
 工具读取你拥有或获准检查的本地文件，不修改 APK 或修复 ELF。静态检查结果不等于真机安装、启动或运行验证。
 
+![真实 MCP stdio 调用：MediaPipe APK 静态检查通过，完整报告与 CLI 一致](docs/assets/inspector-demo.png)
+
+2026-11-26 用官方 Python MCP 客户端实际调用本地服务，将输出制作成静态可视化。真实 MediaPipe 调试 APK 的静态对齐检查通过，设备运行需单独验证。[复现调用与输入哈希](docs/assets/demo.md)。
+
 ## 安装与自检
 
 使用 Python 3.11 或更新版本。在仓库根目录执行，把虚拟环境放在仓库外。
