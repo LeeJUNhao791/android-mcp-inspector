@@ -138,3 +138,7 @@ Share first-use feedback on the synthetic trial in [issue #3](https://github.com
 ## Upstream code
 
 The bundled checker and its CLI tests come from [Android SDK Toolkit v0.8.0](https://github.com/LeeJUNhao791/android-sdk-toolkit/tree/dbd640e7b4ccd8a87beb8ca1ed21be3b301b979c/skills/apk-page-size-check). The included [MIT license](LICENSE) covers these files. To run the upstream CLI suite, use `python -B -m unittest discover -s vendor/apk-page-size-check/tests -v`.
+
+## Contributing
+
+See the [contribution guide](CONTRIBUTING.md) for bug report details, development checks and pull request guidance.

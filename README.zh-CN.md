@@ -143,3 +143,7 @@ python -B examples/make_trial.py 'C:/Temp/Android MCP Trial'
 ```sh
 python -B -m unittest discover -s vendor/apk-page-size-check/tests -v
 ```
+
+## 参与贡献
+
+提交问题或改动前，请阅读[贡献指南](CONTRIBUTING.md)中的复现信息、开发检查与拉取请求说明。
