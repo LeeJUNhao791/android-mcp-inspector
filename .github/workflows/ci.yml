@@ -24,9 +24,17 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
+      - uses: actions/checkout@v7
+        with:
+          repository: LeeJUNhao791/android-sdk-toolkit
+          ref: 8bde8902cbcb38454bcc77529aec40d5bfbd3347
+          path: .toolkit
+          persist-credentials: false
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
       - name: Run MCP stdio tests
+        env:
+          ANDROID_SDK_TOOLKIT_ROOT: ${{ github.workspace }}/.toolkit
         run: python -B -m unittest discover -s tests -v
       - name: Run bundled checker CLI tests
         run: python -B -m unittest discover -s vendor/apk-page-size-check/tests -v
