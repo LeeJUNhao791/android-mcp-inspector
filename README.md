@@ -14,6 +14,10 @@ Actual output visualization from an official Python MCP client calling the local
 
 ## Set up
 
+For a paired source ZIP with the compatible Toolkit, exact MCP dependency pins
+and setup without an Android SDK, see the [PageGuard portable source preview](docs/portable-preview.md).
+This local preview is separate from published releases.
+
 Use Python 3.11 or newer. Run these commands from the repository root with a virtual environment outside the checkout.
 
 Windows (PowerShell)
