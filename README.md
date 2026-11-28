@@ -8,6 +8,14 @@
 
 A local MCP server that checks Android projects and APKs for 16 KB alignment and traces native libraries to candidate AARs. The stdio tool `inspect_apk_16kb` checks the ELF segments and ZIP layout of an APK you own or are authorized to inspect.
 
+## PageGuard: 15-second project demo
+
+![Actual Windows capture: direct CLI and official Python MCP SDK inspect the same synthetic AAR and C++ fixture](docs/assets/pageguard-demo.gif)
+
+The CLI and official Python MCP SDK over stdio return the same complete report: the synthetic ELF has `p_align=4096`, and an explicit C++ page-size definition produces an advisory. This is an actual tool recording, not a Codex UI recording or an installable app test.
+
+**Start here:** [Windows paired source-ZIP quickstart](docs/portable-preview.md). Clean extraction with cached dependency installation was accepted on Windows. Linux fresh installation was not independently accepted. Static AAR/source checks do not prove final APK ZIP alignment, installation, JNI or 16 KB device behavior; no patches are applied. [Recording provenance and SHA-256](docs/assets/media-manifest.json).
+
 ![Actual MCP stdio call: MediaPipe APK inspection returns pass and matches the full CLI report](docs/assets/inspector-demo.png)
 
 Actual output visualization from an official Python MCP client calling the local server on 2026-11-26. The real MediaPipe debug APK passed static alignment checks; device behavior requires separate testing. [Reproduce the call and check the input hash](docs/assets/demo.md).

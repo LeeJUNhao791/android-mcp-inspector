@@ -67,6 +67,10 @@ cwd = "C:/PageGuard/pageguard-preview-2026.11.28.1"
 ANDROID_SDK_TOOLKIT_ROOT = "android-sdk-toolkit"
 ```
 
+此前 Codex CLI 已分别验证预览配置和已安装配置的七组合成场景，完整报告均与
+直接 CLI 一致。现有桌面聊天的工具发现和调用尚未验收；CLI 与官方 SDK 结果
+不代表桌面接入已经通过。
+
 Toolkit 配置是相对服务进程工作目录解析的、受信任的可执行源码路径，不是项目
 输入。不要采用待检查项目提供的不可信 Toolkit 路径。若客户端不支持 `cwd`，
 请把 `server.py` 和 `ANDROID_SDK_TOOLKIT_ROOT` 都改成绝对路径。其他标准 stdio
@@ -120,6 +124,22 @@ $env:ANDROID_SDK_TOOLKIT_ROOT = (Resolve-Path '../android-sdk-toolkit').Path
 & $pageguardPython -B -m unittest discover -s vendor/apk-page-size-check/tests -v
 Pop-Location
 ```
+
+## 检查自己的项目前
+
+请选择直接包含 `app/libs/*.aar` 或
+`uni_modules/*/utssdk/app-android/libs/*.aar` 的项目根目录。扫描器不会递归
+搜索任意依赖缓存或项目布局；仓库中的实际项目可能位于 `demo/`，此时把仓库
+根目录传入会得到 `no_matches`（退出码 3），不代表通过。C/C++ 文件须通过
+项目相对路径 `source_files` 明确指定，不会递归搜索源码。
+
+2026-11-28 的只读试用检查了已有 Android 和 uni-app UTS 项目中的 AAR。
+两者均返回 `pass`，但 `elf64_count: 0`，因此没有证明原生库的 16 KB 兼容性；
+要求 `arm64-v8a` 后，两者均因缺少 ABI 返回 `fail`。仅在每个 AAR 都必须包含
+指定 ABI 时使用 `expected_abis`；纯 Java AAR 可以通过归档检查而没有任何
+64 位 ELF 验证。六次试用通过官方 MCP SDK stdio 返回的完整报告均与直接
+CLI 一致，输入摘要未变化。这与 Codex 桌面验收、最终 APK 打包及设备运行
+验证分别记录。
 
 ## 重新制作源码预览包
 

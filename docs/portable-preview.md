@@ -73,6 +73,11 @@ cwd = "C:/PageGuard/pageguard-preview-2026.11.28.1"
 ANDROID_SDK_TOOLKIT_ROOT = "android-sdk-toolkit"
 ```
 
+Prior Codex CLI acceptance covered seven synthetic cases in each of the preview
+and installed configurations, with complete CLI report parity. Existing desktop
+chat tool discovery and invocation have not been accepted; CLI and official SDK
+results do not establish desktop integration.
+
 The Toolkit setting is a trusted, executable source path relative to the server
 process's working directory; it is never a project input. Do not copy a Toolkit
 path supplied by an untrusted inspected project. A client without `cwd` support
@@ -132,6 +137,24 @@ $env:ANDROID_SDK_TOOLKIT_ROOT = (Resolve-Path '../android-sdk-toolkit').Path
 & $pageguardPython -B -m unittest discover -s vendor/apk-page-size-check/tests -v
 Pop-Location
 ```
+
+## Before inspecting your own project
+
+Select the project root that directly contains `app/libs/*.aar` or
+`uni_modules/*/utssdk/app-android/libs/*.aar`. The scanner does not recursively
+discover arbitrary dependency caches or project layouts. A repository may need
+its nested `demo/` as `project_root`; scanning the repository root can return
+`no_matches` (exit 3), which is not a pass. Select C/C++ source files explicitly
+with project-relative `source_files`; no recursive source search is performed.
+
+A read-only trial on 2026-11-28 checked existing Android and uni-app UTS project
+AARs. Both returned `pass` with `elf64_count: 0`, so neither established native
+16 KB compatibility. Requiring `arm64-v8a` returned `fail` for the missing ABI.
+Use `expected_abis` only when every AAR must contain that ABI; a Java-only AAR
+can otherwise pass without any 64-bit ELF evaluation. The six trial responses
+matched the complete direct CLI reports through the official MCP SDK over
+stdio, with input hashes unchanged. This is separate from Codex desktop
+acceptance, final APK packaging and device/runtime validation.
 
 ## Build another source preview
 
