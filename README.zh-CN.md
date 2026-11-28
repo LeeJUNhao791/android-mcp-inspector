@@ -1,5 +1,8 @@
 # Android MCP Inspector
 
+配套 Toolkit 的源码 ZIP、固定 MCP 依赖和无需 Android SDK 的准备方法见
+[PageGuard 便携源码预览包](docs/portable-preview.zh-CN.md)。该本地预览与正式发布分开。
+
 [![CI](https://github.com/LeeJUNhao791/android-mcp-inspector/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/LeeJUNhao791/android-mcp-inspector/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/LeeJUNhao791/android-mcp-inspector)](https://github.com/LeeJUNhao791/android-mcp-inspector/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

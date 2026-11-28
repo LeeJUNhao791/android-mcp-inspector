@@ -4,6 +4,8 @@ Dates are GitHub Release publication dates in UTC.
 
 ## Unreleased
 
+- Add a paired PageGuard source-preview ZIP builder, exact MCP runtime dependency pins, bilingual portable setup and synthetic project examples. The preview preserves the existing scanner and MCP contracts; no device acceptance is implied.
+
 - Show actual output from an official Python MCP client inspecting a real MediaPipe debug APK, with reproduction details. The output covers static alignment checks, not device behavior.
 - Add contribution guidance and a pull request template distinguishing CLI, MCP, and device evidence. [#7](https://github.com/LeeJUNhao791/android-mcp-inspector/pull/7)
 
