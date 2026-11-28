@@ -13,6 +13,14 @@
 
 工具读取你拥有或获准检查的本地文件，不修改 APK 或修复 ELF。静态检查结果不等于真机安装、启动或运行验证。
 
+## PageGuard：15 秒项目检查演示
+
+![Windows 实际录屏：CLI 与官方 Python MCP SDK 检查同一组合成 AAR 和 C++ 样例](docs/assets/pageguard-demo.gif)
+
+CLI 和通过 stdio 调用的官方 Python MCP SDK 返回相同的完整报告：合成 ELF 的 `p_align=4096`，明确的 C++ 页大小定义产生一条建议。这是实际工具录屏，不是 Codex 界面录屏，也不是可安装应用的测试。
+
+**从这里开始：**[Windows 双仓库源码 ZIP 上手](docs/portable-preview.zh-CN.md)。已在 Windows 完成干净解压及缓存依赖安装验收；Linux 全新安装尚未独立验收。静态 AAR/源码检查不证明最终 APK ZIP 对齐、安装、JNI 或 16 KB 设备行为，也不应用补丁。[录屏来源与 SHA-256](docs/assets/media-manifest.json)。
+
 ![真实 MCP stdio 调用：MediaPipe APK 静态检查通过，完整报告与 CLI 一致](docs/assets/inspector-demo.png)
 
 2026-11-26 用官方 Python MCP 客户端实际调用本地服务，将输出制作成静态可视化。真实 MediaPipe 调试 APK 的静态对齐检查通过，设备运行需单独验证。[复现调用与输入哈希](docs/assets/demo.md)。

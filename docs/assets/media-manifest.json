@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "recordedOn": "2026-11-28",
+  "capture": "Actual Windows GDI window capture; 1x speed; no audio",
+  "media": {
+    "path": "pageguard-demo.gif",
+    "bytes": 61815,
+    "sha256": "5581fc40dd65d07628ed0f11aea1a08ffb1dea571bc390e8e4f316d87996d1f7",
+    "durationSeconds": 15,
+    "width": 1440,
+    "height": 816,
+    "frames": 150
+  },
+  "recordedSources": {
+    "android-mcp-inspector": "7148f63af8013acdc00dd1dfe528b09e86d4c060",
+    "android-sdk-toolkit": "a17b3a730ffa9090d741d8edd938afeb026d0774"
+  },
+  "documentationBaseline": "92cbc53b4d0e8e87392534e61f0d4caa699d6499",
+  "client": "Direct CLI and official Python MCP SDK client over stdio; not Codex UI",
+  "scope": "Synthetic AAR/ELF and C++ fixtures; static inspection only; expected fail p_align 4096; complete CLI/MCP report parity; no APK/device/JNI acceptance or patching.",
+  "finalRuntimeComparison": {
+    "inspectorSource": "007ac7512db3da4599725ccc6c3d4b38e3389869",
+    "toolkitSource": "a17b3a730ffa9090d741d8edd938afeb026d0774",
+    "comparedFiles": 31,
+    "byteIdentical": true
+  }
+}
