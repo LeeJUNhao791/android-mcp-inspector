@@ -107,9 +107,30 @@ class ProjectStdioTest(unittest.IsolatedAsyncioTestCase):
                 self.assertFalse(apk.is_error)
                 self.assertEqual(apk.structured_content["report"]["status"], "invalid")
 
-    async def test_bad_options_and_request_limits_are_tool_errors(self):
+    async def test_bad_options_without_cli_json_are_tool_errors(self):
         async with self.client() as client:
-            for extra in ({"expected_abis": ["--help"]}, {"source_files": ["pages.cpp"] * 101}):
-                result = await client.call_tool("inspect_android_project_16kb", {"project_root": str(self.root), **extra})
-                self.assertTrue(result.is_error)
-                self.assertIsNone(result.structured_content)
+            result = await client.call_tool("inspect_android_project_16kb", {
+                "project_root": str(self.root), "expected_abis": ["--help"],
+            })
+            self.assertTrue(result.is_error)
+            self.assertIsNone(result.structured_content)
+
+    async def test_excess_source_requests_preserve_invalid_report_and_aar_results(self):
+        self.aar()
+        (self.root / "pages.cpp").write_text("#define PAGE_SIZE 4096\n", encoding="utf-8")
+        async with self.client() as client:
+            report = await self.check(client, 2, "invalid", source_files=["pages.cpp"] * 101)
+        self.assertEqual(len(report["artifacts"]), 1)
+        self.assertEqual(report["artifacts"][0]["status"], "pass")
+        self.assertEqual(report["source_advisories"]["status"], "invalid")
+        self.assertEqual(report["source_advisories"]["files"], [])
+        self.assertEqual(report["source_advisories"]["errors"],
+                         [{"source": ".", "error": "At most 100 source files are allowed."}])
+
+    async def test_repeated_expected_abis_preserve_cli_normalization_and_pass(self):
+        self.aar()
+        async with self.client() as client:
+            report = await self.check(client, 0, "pass", expected_abis=["arm64-v8a"] * 5)
+        self.assertEqual(report["expected_abis"], ["arm64-v8a"])
+        self.assertEqual(len(report["artifacts"]), 1)
+        self.assertEqual(report["artifacts"][0]["status"], "pass")

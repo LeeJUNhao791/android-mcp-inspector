@@ -63,8 +63,6 @@ def inspect_android_project_16kb(
     checker = Path(TOOLKIT_ROOT).resolve() / "skills/android-project-check/scripts/check_project.py"
     if not checker.is_file():
         raise ToolError("ANDROID_SDK_TOOLKIT_ROOT does not contain the project scanner.")
-    if len(source_files or []) > 100 or len(expected_abis or []) > 4:
-        raise ToolError("At most 100 source files and 4 expected ABI requests are allowed.")
     options = [f"--expect-abi={abi}" for abi in expected_abis or []]
     options += [f"--source-file={name}" for name in source_files or []]
     try:
