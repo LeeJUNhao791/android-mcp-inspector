@@ -48,11 +48,16 @@ class InspectorStdioTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.structured_content, {"exit_code": code, "report": report})
         return report
 
-    async def test_exposes_only_one_read_only_inspection_tool(self):
+    async def test_exposes_read_only_inspection_tools(self):
         self.assertTrue((ROOT / "server.py").is_file(), "MCP server entry point is missing")
         async with self.client() as client:
             tools = (await client.list_tools()).tools
-            self.assertEqual([tool.name for tool in tools], ["inspect_apk_16kb"])
+            self.assertEqual([tool.name for tool in tools], ["inspect_apk_16kb", "inspect_android_project_16kb"])
+            self.assertEqual(set(tools[1].input_schema["properties"]),
+                             {"project_root", "expected_abis", "source_files"})
+            self.assertEqual(tools[1].input_schema["required"], ["project_root"])
+            self.assertTrue(tools[1].annotations.read_only_hint)
+            self.assertFalse(tools[1].annotations.open_world_hint)
             self.assertEqual(set(tools[0].input_schema["properties"]),
                              {"apk_path", "aar_manifest", "native_provenance"})
             self.assertEqual(tools[0].input_schema["required"], ["apk_path"])

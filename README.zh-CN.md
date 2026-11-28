@@ -147,3 +147,44 @@ python -B -m unittest discover -s vendor/apk-page-size-check/tests -v
 ## 参与贡献
 
 提交问题或改动前，请阅读[贡献指南](CONTRIBUTING.md)中的复现信息、开发检查与拉取请求说明。
+
+## Android/UTS 本地项目检查（源码原型）
+
+新增 `inspect_android_project_16kb`，复用外部可信 Toolkit 检出目录，不复制整套工具。
+基础 AAR 巡检已在 v0.12.0 发布，但该归档不包含新增 `--source-file` 提示参数。
+已验证的源码版本为 [Toolkit `8bde890`](https://github.com/LeeJUNhao791/android-sdk-toolkit/commit/8bde8902cbcb38454bcc77529aec40d5bfbd3347)，
+尚未作为本功能发版。请保持兄弟 Skill 完整，在 MCP 服务配置中添加：
+
+```json
+"env": { "ANDROID_SDK_TOOLKIT_ROOT": "C:/path/to/android-sdk-toolkit" }
+```
+
+目录必须事先存在，服务不会自动下载或安装。未配置时 APK 工具仍可用；项目工具返回
+明确的工具错误。配置错误、不兼容报告、参数/预检没有 JSON 或 120 秒超时均不是通过。
+本地测试也需设置该环境变量；CI 固定使用上述提交。完整操作见英文 README 对应章节。
+
+```json
+{
+  "project_root": "C:/Android projects/example",
+  "expected_abis": ["arm64-v8a"],
+  "source_files": ["app/src/main/cpp/pages.cpp"]
+}
+```
+
+仅 `project_root` 必填。AAR 范围为 `app/libs/*.aar` 及
+`uni_modules/*/utssdk/app-android/libs/*.aar` 的直接文件。可选 ABI 要求适用于每个 AAR，
+包括纯 Java AAR。完整 `report` 和 `exit_code` 保持 CLI 的四种结果：通过 0、失败 1、
+无效输入 2、无匹配 3；无效优先，保留其他 AAR 结果、相对路径与 AAR/SO 摘要。
+无匹配不代表通过；`elf64_count: 0` 不代表完成 64 位对齐验证。AAR 不证明 APK ZIP 对齐。
+
+`source_files` 只读检查明确指定的项目内 UTF-8 C/C++ 文件，统一使用 `/` 分隔符，
+不递归搜索。最多 100 个请求、每文件 1 MiB、总计 2000 条提示；越界路径、父目录穿越及
+项目根目录以下的符号链接/重解析点无效。`source_advisories` 提供源码摘要、行号和规则，
+针对明确的 4096 页大小定义及有上下文的页地址对齐表达式；普通缓冲区、注释、字符串内
+的 4096 不会一律报警。提示不改变 AAR 通过、失败或无匹配结果；源码输入无效则整体无效，
+并保留 AAR 结果。省略源码文件时，原有项目 JSON 格式保持不变。
+
+这些词法提示需人工复核，不证明缺陷、源码安全或 16 KB 运行兼容性。别名、多行表达式、
+原始字符串和程序语义可能漏报或误判。不生成或应用补丁，不修复闭源 AAR；应基于摘要
+要求供应商整改。工具不构建、不下载、不修改输入、不写输出文件；最终 APK 打包及设备/JNI
+运行另行验证。官方 stdio 测试使用明确标注的合成夹具，并对比完整 CLI 报告与输入摘要。
