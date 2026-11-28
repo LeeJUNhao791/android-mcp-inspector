@@ -21,7 +21,7 @@ extracting. In PowerShell use `Get-FileHash <zip> -Algorithm SHA256`; on Linux
 use `sha256sum -c SHA256SUMS`. Extract into a new directory outside the source
 checkouts. Paths containing spaces are supported.
 
-The tested environment is Windows, Python 3.11.4 and MCP 2.3.0. The exact
+The tested environments are Windows with Python 3.11.4 or 3.12.7 and MCP 2.3.0. The exact
 MCP runtime dependency closure is `android-mcp-inspector/requirements-portable.txt`
 (29 Windows distributions; `pywin32` is conditional). Python 3.11+ is required
 by Inspector; other Python/platform combinations require their own verification.
@@ -30,7 +30,7 @@ The Linux commands below describe the equivalent setup, not a Linux acceptance r
 Windows (PowerShell), from the extracted root:
 
 ```powershell
-Set-Location 'C:/PageGuard/pageguard-preview-2026.11.28'
+Set-Location 'C:/PageGuard/pageguard-preview-2026.11.28.1'
 $pageguardEnv = Join-Path (Split-Path $PWD -Parent) 'pageguard-venv'
 python -m venv $pageguardEnv
 $pageguardPython = Join-Path $pageguardEnv 'Scripts/python.exe'
@@ -67,7 +67,7 @@ modify your client configuration.
 [mcp_servers.pageguard_preview]
 command = "C:/PageGuard/pageguard-venv/Scripts/python.exe"
 args = ["-B", "android-mcp-inspector/server.py"]
-cwd = "C:/PageGuard/pageguard-preview-2026.11.28"
+cwd = "C:/PageGuard/pageguard-preview-2026.11.28.1"
 
 [mcp_servers.pageguard_preview.env]
 ANDROID_SDK_TOOLKIT_ROOT = "android-sdk-toolkit"
@@ -82,7 +82,7 @@ No server code change or global installation is needed.
 
 ## Try the synthetic project cases
 
-In a new terminal at the extracted root, generate fixtures outside the bundle:
+After setup, at the extracted root, generate fixtures outside the bundle:
 
 ```powershell
 & $pageguardPython -B android-mcp-inspector/examples/make_project_trial.py '../synthetic-projects'
@@ -126,7 +126,8 @@ regression tests additionally require Git):
 
 ```powershell
 Push-Location android-mcp-inspector
-$env:ANDROID_SDK_TOOLKIT_ROOT = '../android-sdk-toolkit'
+# Tests launch child servers in temporary working directories.
+$env:ANDROID_SDK_TOOLKIT_ROOT = (Resolve-Path '../android-sdk-toolkit').Path
 & $pageguardPython -B -m unittest discover -s tests -v
 & $pageguardPython -B -m unittest discover -s vendor/apk-page-size-check/tests -v
 Pop-Location
@@ -138,7 +139,7 @@ Maintainers need Git and two clean, committed checkouts; users of the ZIP do
 not need Git. Run from Inspector with an inspected Toolkit checkout:
 
 ```sh
-python -B scripts/build_portable.py --toolkit ../android-sdk-toolkit --version 2026.11.28 --output-dir ../pageguard-package
+python -B scripts/build_portable.py --toolkit ../android-sdk-toolkit --version 2026.11.28.1 --output-dir ../pageguard-package
 ```
 
 This standard-library builder packages committed tracked files using

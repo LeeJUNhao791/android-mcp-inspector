@@ -19,7 +19,7 @@ Toolkit 内的同级 Skills。两个仓库的 MIT `LICENSE`、Inspector 已有�
 `Get-FileHash <zip> -Algorithm SHA256`，Linux 可用 `sha256sum -c SHA256SUMS`。
 解压到开发工作区以外的全新目录，路径可以包含空格。
 
-已验证环境为 Windows、Python 3.11.4、MCP 2.3.0。精确的 MCP 运行依赖闭包在
+已验证环境为 Windows、Python 3.11.4 或 3.12.7、MCP 2.3.0。精确的 MCP 运行依赖闭包在
 `android-mcp-inspector/requirements-portable.txt` 中，Windows 共 29 个发行包，
 其中 `pywin32` 只在 Windows 安装。Inspector 要求 Python 3.11+；其他 Python
 版本和平台仍需单独验证。下面的 Linux 命令是等价使用方法，不代表已完成 Linux 验收。
@@ -27,7 +27,7 @@ Toolkit 内的同级 Skills。两个仓库的 MIT `LICENSE`、Inspector 已有�
 Windows PowerShell，在解压后的根目录运行：
 
 ```powershell
-Set-Location 'C:/PageGuard/pageguard-preview-2026.11.28'
+Set-Location 'C:/PageGuard/pageguard-preview-2026.11.28.1'
 $pageguardEnv = Join-Path (Split-Path $PWD -Parent) 'pageguard-venv'
 python -m venv $pageguardEnv
 $pageguardPython = Join-Path $pageguardEnv 'Scripts/python.exe'
@@ -61,7 +61,7 @@ ANDROID_SDK_TOOLKIT_ROOT=android-sdk-toolkit ../pageguard-venv/bin/python -B and
 [mcp_servers.pageguard_preview]
 command = "C:/PageGuard/pageguard-venv/Scripts/python.exe"
 args = ["-B", "android-mcp-inspector/server.py"]
-cwd = "C:/PageGuard/pageguard-preview-2026.11.28"
+cwd = "C:/PageGuard/pageguard-preview-2026.11.28.1"
 
 [mcp_servers.pageguard_preview.env]
 ANDROID_SDK_TOOLKIT_ROOT = "android-sdk-toolkit"
@@ -74,7 +74,7 @@ Toolkit 配置是相对服务进程工作目录解析的、受信任的可执行
 
 ## 试用合成项目
 
-在解压根目录的新终端中生成合成输入，放在预览包外：
+完成准备后，在解压根目录生成合成输入，放在预览包外：
 
 ```powershell
 & $pageguardPython -B android-mcp-inspector/examples/make_project_trial.py '../synthetic-projects'
@@ -114,7 +114,8 @@ Toolkit v0.12.0 发布 ZIP 不含 `--source-file`，请使用预览包中配套�
 
 ```powershell
 Push-Location android-mcp-inspector
-$env:ANDROID_SDK_TOOLKIT_ROOT = '../android-sdk-toolkit'
+# 测试会在临时工作目录启动服务子进程。
+$env:ANDROID_SDK_TOOLKIT_ROOT = (Resolve-Path '../android-sdk-toolkit').Path
 & $pageguardPython -B -m unittest discover -s tests -v
 & $pageguardPython -B -m unittest discover -s vendor/apk-page-size-check/tests -v
 Pop-Location
@@ -126,7 +127,7 @@ Pop-Location
 根目录运行，并传入已检查的 Toolkit 源码目录：
 
 ```sh
-python -B scripts/build_portable.py --toolkit ../android-sdk-toolkit --version 2026.11.28 --output-dir ../pageguard-package
+python -B scripts/build_portable.py --toolkit ../android-sdk-toolkit --version 2026.11.28.1 --output-dir ../pageguard-package
 ```
 
 打包脚本只使用标准库，通过 `git -c core.autocrlf=false archive` 读取已提交、
